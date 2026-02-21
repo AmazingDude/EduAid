@@ -11,7 +11,7 @@ Coverage:
   - HTTP-method enforcement
   - Boundary-value validation for ``max_questions``
 """
-
+import os
 import io
 import subprocess
 from typing import ClassVar
@@ -919,6 +919,50 @@ class TestGenerateGForm:
         """Verify GET is rejected on the POST-only gform endpoint."""
         resp = client.get("/generate_gform")
         assert resp.status_code == 405
+
+    @pytest.mark.parametrize("q_type, qa_item", [
+        ("mcq", {"question": "What is the capital of France?", "answer": "Paris", "options": ["London", "Berlin", "Paris", "Madrid"]}),
+        ("shortq", {"question": "What is the capital of France?", "answer": "Paris"}),
+        ("boolq", {"question": "Is Paris the capital of France?", "answer": "True"})
+    ])
+    @patch("server.discovery.build")
+    @patch("server.file.Storage")
+    def test_happy_path_generates_form_all_types(self, mock_storage, mock_build, client, q_type, qa_item):
+        """Verify that valid requests successfully create Google Forms for all question types."""
+        # 1. Mock the Authentication/Credentials
+        mock_creds = MagicMock()
+        mock_creds.invalid = False
+        mock_storage.return_value.get.return_value = mock_creds
+
+        # 2. Mock the Google API Client Chained Calls
+        mock_forms = mock_build.return_value.forms.return_value
+        mock_create = mock_forms.create.return_value
+        mock_create.execute.return_value = {
+            "formId": "mock_form_12345",
+            "responderUri": "https://docs.google.com/forms/d/e/mock/viewform"
+        }
+        mock_update = mock_forms.batchUpdate.return_value
+        mock_update.execute.return_value = {}
+
+        # 3. Define the Valid Payload dynamically
+        payload = {
+            "question_type": q_type,
+            "qa_pairs": [qa_item]
+        }
+
+        # 4. Make the Request
+        resp = client.post("/generate_gform", json=payload)
+
+        # 5. Assertions
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert "responder_url" in data
+        assert data["responder_url"] == "https://docs.google.com/forms/d/e/mock/viewform"
+        assert "edit_url" in data
+        assert data["edit_url"] == "https://docs.google.com/forms/d/mock_form_12345/edit"
+        mock_build.assert_called_once()
+        mock_forms.create.assert_called_once()
+        mock_forms.batchUpdate.assert_called_once()
 
 
 # ===========================================================================
