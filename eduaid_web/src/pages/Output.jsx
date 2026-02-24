@@ -6,17 +6,8 @@ import apiClient from "../utils/apiClient";
 import { FiShuffle, FiEdit2, FiCheck, FiX } from "react-icons/fi";
 
 const Output = () => {
-  const [qaPairs, setQaPairs] = useState(() => {
-  try {
-    const stored = localStorage.getItem("qaPairs");
-    if (!stored) return [];
-    const parsed = JSON.parse(stored);
-    return Array.isArray(parsed) ? parsed : []; 
-  } catch (e) {
-    console.error("Critical: Initial load failed", e);
-    return [];
-  }
-});
+  const [qaPairs, setQaPairs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [questionType, setQuestionType] = useState(
     localStorage.getItem("selectedQuestionType")
   );
@@ -102,14 +93,17 @@ const Output = () => {
 
   useEffect(() => {
     const stored = localStorage.getItem("qaPairs");
-    if (!stored) return;
-
+    if (!stored) {
+      setIsLoading(false);
+      return;
+    }
     let qaPairsFromStorage = {};
     try {
       qaPairsFromStorage = JSON.parse(stored) || {};
     } catch (e) {
       console.error("Invalid qaPairs in localStorage. Clearing storage to prevent loops.", e);
       localStorage.removeItem("qaPairs");
+      setIsLoading(false);
       return;
     }
 
@@ -168,6 +162,7 @@ const Output = () => {
     }
 
     setQaPairs(combinedQaPairs);
+    setIsLoading(false);
   }, [questionType]);
 
   const generateGoogleForm = async () => {
@@ -263,7 +258,9 @@ const Output = () => {
 
           {/* Questions Container - Responsive padding and margins */}
           <div className="flex-1 overflow-y-auto scrollbar-hide px-2 sm:px-4">
-          {qaPairs && qaPairs.length > 0 ? (
+            {isLoading ? (
+               <div className="flex justify-center items-center h-full text-white">Loading...</div>
+            ) : qaPairs && qaPairs.length > 0 ? (
               qaPairs.map((qaPair, index) => {
                 const shuffledOptions = shuffledOptionsMap[index];
                 const isEditing = editingIndex === index;
@@ -398,19 +395,25 @@ const Output = () => {
             )}
           </div>
 
-          {/* Action Buttons - Responsive layout */}
+          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mx-4 sm:mx-auto pb-4 sm:pb-6">
             <button
-              className="bg-[#518E8E] items-center flex gap-1 w-full sm:w-auto font-semibold text-white px-4 sm:px-6 py-3 sm:py-2 rounded-xl text-sm sm:text-base hover:bg-[#3a6b6b] transition-colors justify-center"
+              className={`${qaPairs.length === 0 ? 'bg-gray-500 cursor-not-allowed' : 'bg-[#518E8E] hover:bg-[#3a6b6b]'} items-center flex gap-1 w-full sm:w-auto font-semibold text-white px-4 sm:px-6 py-3 sm:py-2 rounded-xl text-sm sm:text-base transition-colors justify-center`}
               onClick={generateGoogleForm}
+              disabled={qaPairs.length === 0}
             >
               Generate Google form
             </button>
             
             <div className="relative w-full sm:w-auto">
               <button
-                className="bg-[#518E8E] items-center flex gap-1 w-full sm:w-auto font-semibold text-white px-4 sm:px-6 py-3 sm:py-2 rounded-xl text-sm sm:text-base hover:bg-[#3a6b6b] transition-colors justify-center"
-                onClick={() => document.getElementById('pdfDropdown').classList.toggle('hidden')}
+                className={`${qaPairs.length === 0 ? 'bg-gray-500 cursor-not-allowed' : 'bg-[#518E8E] hover:bg-[#3a6b6b]'} items-center flex gap-1 w-full sm:w-auto font-semibold text-white px-4 sm:px-6 py-3 sm:py-2 rounded-xl text-sm sm:text-base transition-colors justify-center`}
+                onClick={() => {
+                  if (qaPairs.length > 0) {
+                    document.getElementById('pdfDropdown').classList.toggle('hidden')
+                  }
+                }}
+                disabled={qaPairs.length === 0}
               >
                 Generate PDF
               </button>
