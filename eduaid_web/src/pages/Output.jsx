@@ -92,30 +92,28 @@ const Output = () => {
 
   useEffect(() => {
     const qaPairsFromStorage = JSON.parse(localStorage.getItem("qaPairs")) || {};
-    
+
     if (qaPairsFromStorage) {
       const combinedQaPairs = [];
+      if (qaPairsFromStorage.output_boolq) {
+        const boolData = qaPairsFromStorage.output_boolq;
+        const questions = boolData.Boolean_Questions || boolData.output;
+        const answers = boolData.answers;
 
-      if (qaPairsFromStorage["output_boolq"]) {
-        const boolData = qaPairsFromStorage["output_boolq"];
-        const questions = boolData["Boolean_Questions"] || boolData["output"];
-        const answers = boolData["answers"];
-        const context = boolData["Text"] || boolData["text"];
-
-        if (questions && Array.isArray(questions)) {
+        if (Array.isArray(questions)) {
           questions.forEach((question, index) => {
             combinedQaPairs.push({
               question,
               question_type: "Boolean",
-              context: context,
-              answer: answers && answers[index] ? answers[index] : "Answer not found",
+              context: boolData.Text || boolData.text,
+              answer: answers?.[index] ?? "Answer not found",
             });
           });
         }
       }
 
-      if (qaPairsFromStorage["output_mcq"]) {
-        qaPairsFromStorage["output_mcq"]["questions"].forEach((qaPair) => {
+      if (qaPairsFromStorage.output_mcq && Array.isArray(qaPairsFromStorage.output_mcq.questions)) {
+        qaPairsFromStorage.output_mcq.questions.forEach((qaPair) => {
           combinedQaPairs.push({
             question: qaPair.question_statement,
             question_type: "MCQ",
@@ -126,31 +124,8 @@ const Output = () => {
         });
       }
 
-      if (qaPairsFromStorage["output_mcq"] || questionType === "get_mcq") {
-        qaPairsFromStorage["output"].forEach((qaPair) => {
-          combinedQaPairs.push({
-            question: qaPair.question_statement,
-            question_type: "MCQ",
-            options: qaPair.options,
-            answer: qaPair.answer,
-            context: qaPair.context,
-          });
-        });
-      }
-
-      if (questionType === "get_boolq" && qaPairsFromStorage["output"]) {
-        const answers = qaPairsFromStorage["answers"];
-        
-        qaPairsFromStorage["output"].forEach((qaPair, index) => {
-          combinedQaPairs.push({
-            question: qaPair,
-            question_type: "Boolean",
-            answer: answers && answers[index] ? answers[index] : "Answer not found",
-          });
-        });
-      } 
-      else if (qaPairsFromStorage["output"] && questionType !== "get_mcq" && questionType !== "get_boolq") {
-        qaPairsFromStorage["output"].forEach((qaPair) => {
+      if (qaPairsFromStorage.output_shortq && Array.isArray(qaPairsFromStorage.output_shortq.questions)) {
+        qaPairsFromStorage.output_shortq.questions.forEach((qaPair) => {
           combinedQaPairs.push({
             question: qaPair.question || qaPair.question_statement || qaPair.Question,
             options: qaPair.options,
@@ -159,6 +134,40 @@ const Output = () => {
             question_type: "Short",
           });
         });
+      }
+
+      
+      if (Array.isArray(qaPairsFromStorage.output)) {
+        if (questionType === "get_boolq") {
+          const answers = qaPairsFromStorage.answers;
+          qaPairsFromStorage.output.forEach((qaPair, index) => {
+            combinedQaPairs.push({
+              question: qaPair,
+              question_type: "Boolean",
+              answer: answers?.[index] ?? "Answer not found",
+            });
+          });
+        } else if (questionType === "get_mcq") {
+          qaPairsFromStorage.output.forEach((qaPair) => {
+            combinedQaPairs.push({
+              question: qaPair.question_statement,
+              question_type: "MCQ",
+              options: qaPair.options,
+              answer: qaPair.answer,
+              context: qaPair.context,
+            });
+          });
+        } else {
+          qaPairsFromStorage.output.forEach((qaPair) => {
+            combinedQaPairs.push({
+              question: qaPair.question || qaPair.question_statement || qaPair.Question,
+              options: qaPair.options,
+              answer: qaPair.answer || qaPair.Answer,
+              context: qaPair.context,
+              question_type: "Short",
+            });
+          });
+        }
       }
 
       setQaPairs(combinedQaPairs);
