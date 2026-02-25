@@ -91,6 +91,7 @@ const Output = () => {
   };
 
   useEffect(() => {
+    const questionType = localStorage.getItem("selectedQuestionType");
     let qaPairsFromStorage = {};
     try {
       qaPairsFromStorage = JSON.parse(localStorage.getItem("qaPairs")) || {};
