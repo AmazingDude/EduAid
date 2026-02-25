@@ -125,10 +125,10 @@ const Output = () => {
       if (qaPairsFromStorage.output_mcq && Array.isArray(qaPairsFromStorage.output_mcq.questions)) {
         qaPairsFromStorage.output_mcq.questions.forEach((qaPair) => {
           combinedQaPairs.push({
-            question: qaPair.question_statement,
+            question: qaPair.question ?? qaPair.question_statement ?? qaPair.Question,
             question_type: "MCQ",
             options: qaPair.options,
-            answer: qaPair.answer,
+            answer: qaPair.answer ?? qaPair.Answer,
             context: qaPair.context,
           });
         });
@@ -137,9 +137,9 @@ const Output = () => {
       if (qaPairsFromStorage.output_shortq && Array.isArray(qaPairsFromStorage.output_shortq.questions)) {
         qaPairsFromStorage.output_shortq.questions.forEach((qaPair) => {
           combinedQaPairs.push({
-            question: qaPair.question || qaPair.question_statement || qaPair.Question,
+            question: qaPair.question ?? qaPair.question_statement ?? qaPair.Question,
             options: qaPair.options,
-            answer: qaPair.answer || qaPair.Answer,
+            answer: qaPair.answer ?? qaPair.Answer,
             context: qaPair.context,
             question_type: "Short",
           });
@@ -170,9 +170,9 @@ const Output = () => {
         } else {
           qaPairsFromStorage.output.forEach((qaPair) => {
             combinedQaPairs.push({
-              question: qaPair.question || qaPair.question_statement || qaPair.Question,
+              question: qaPair.question ?? qaPair.question_statement ?? qaPair.Question,
               options: qaPair.options,
-              answer: qaPair.answer || qaPair.Answer,
+              answer: qaPair.answer ?? qaPair.Answer,
               context: qaPair.context,
               question_type: "Short",
             });
