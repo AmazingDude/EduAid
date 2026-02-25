@@ -74,8 +74,17 @@ def get_boolq():
     output = BoolQGen.generate_boolq(
         {"input_text": input_text, "max_questions": max_questions}
     )
-    boolean_questions = output["Boolean_Questions"]
-    return jsonify({"output": boolean_questions})
+    boolean_questions = output.get("Boolean_Questions", [])
+    raw_answers = answer.predict_boolean_answer(
+        {"input_text": input_text, "input_question": boolean_questions}
+    )
+    string_answers = ["True" if ans else "False" for ans in raw_answers]
+    return jsonify({
+        "output": boolean_questions,
+        "answers": string_answers,
+        "text": output.get("Text", ""),
+        "count": output.get("Count", max_questions)
+    })
 
 
 @app.route("/get_shortq", methods=["POST"])

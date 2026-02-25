@@ -91,21 +91,27 @@ const Output = () => {
   };
 
   useEffect(() => {
-    const qaPairsFromStorage =
-      JSON.parse(localStorage.getItem("qaPairs")) || {};
+    const qaPairsFromStorage = JSON.parse(localStorage.getItem("qaPairs")) || {};
+    
     if (qaPairsFromStorage) {
       const combinedQaPairs = [];
 
       if (qaPairsFromStorage["output_boolq"]) {
-        qaPairsFromStorage["output_boolq"]["Boolean_Questions"].forEach(
-          (question, index) => {
+        const boolData = qaPairsFromStorage["output_boolq"];
+        const questions = boolData["Boolean_Questions"] || boolData["output"];
+        const answers = boolData["answers"];
+        const context = boolData["Text"] || boolData["text"];
+
+        if (questions && Array.isArray(questions)) {
+          questions.forEach((question, index) => {
             combinedQaPairs.push({
               question,
               question_type: "Boolean",
-              context: qaPairsFromStorage["output_boolq"]["Text"],
+              context: context,
+              answer: answers && answers[index] ? answers[index] : "Answer not found",
             });
-          }
-        );
+          });
+        }
       }
 
       if (qaPairsFromStorage["output_mcq"]) {
@@ -132,18 +138,21 @@ const Output = () => {
         });
       }
 
-      if (questionType == "get_boolq") {
-        qaPairsFromStorage["output"].forEach((qaPair) => {
+      if (questionType === "get_boolq" && qaPairsFromStorage["output"]) {
+        const answers = qaPairsFromStorage["answers"];
+        
+        qaPairsFromStorage["output"].forEach((qaPair, index) => {
           combinedQaPairs.push({
             question: qaPair,
             question_type: "Boolean",
+            answer: answers && answers[index] ? answers[index] : "Answer not found",
           });
         });
-      } else if (qaPairsFromStorage["output"] && questionType !== "get_mcq") {
+      } 
+      else if (qaPairsFromStorage["output"] && questionType !== "get_mcq" && questionType !== "get_boolq") {
         qaPairsFromStorage["output"].forEach((qaPair) => {
           combinedQaPairs.push({
-            question:
-              qaPair.question || qaPair.question_statement || qaPair.Question,
+            question: qaPair.question || qaPair.question_statement || qaPair.Question,
             options: qaPair.options,
             answer: qaPair.answer || qaPair.Answer,
             context: qaPair.context,
@@ -154,7 +163,7 @@ const Output = () => {
 
       setQaPairs(combinedQaPairs);
     }
-  }, []);
+  }, [questionType]);
 
   const generateGoogleForm = async () => {
     try {
