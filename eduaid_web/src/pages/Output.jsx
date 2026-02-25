@@ -7,9 +7,7 @@ import { FiShuffle, FiEdit2, FiCheck, FiX } from "react-icons/fi";
 
 const Output = () => {
   const [qaPairs, setQaPairs] = useState([]);
-  const [questionType, setQuestionType] = useState(
-    localStorage.getItem("selectedQuestionType")
-  );
+  const questionType = localStorage.getItem("selectedQuestionType");
   const [pdfMode, setPdfMode] = useState("questions");
   const [editingIndex, setEditingIndex] = useState(null);
   const [editedQuestion, setEditedQuestion] = useState("");
@@ -102,11 +100,11 @@ const Output = () => {
 
     if (Object.keys(qaPairsFromStorage).length > 0) {
       const combinedQaPairs = [];
-      const hasStructuredKeys = 
+      const hasStructuredKeys = Boolean(
         qaPairsFromStorage.output_boolq || 
         qaPairsFromStorage.output_mcq || 
-        qaPairsFromStorage.output_shortq;
-
+        qaPairsFromStorage.output_shortq
+      );
       if (qaPairsFromStorage.output_boolq) {
         const boolData = qaPairsFromStorage.output_boolq;
         const questions = boolData.Boolean_Questions || boolData.output;
@@ -162,10 +160,10 @@ const Output = () => {
         } else if (questionType === "get_mcq") {
           qaPairsFromStorage.output.forEach((qaPair) => {
             combinedQaPairs.push({
-              question: qaPair.question_statement,
+              question: qaPair.question || qaPair.question_statement || qaPair.Question,
               question_type: "MCQ",
               options: qaPair.options,
-              answer: qaPair.answer,
+              answer: qaPair.answer || qaPair.Answer || qaPair.correctAnswer,
               context: qaPair.context,
             });
           });
