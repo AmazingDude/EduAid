@@ -91,10 +91,21 @@ const Output = () => {
   };
 
   useEffect(() => {
-    const qaPairsFromStorage = JSON.parse(localStorage.getItem("qaPairs")) || {};
+    let qaPairsFromStorage = {};
+    try {
+      qaPairsFromStorage = JSON.parse(localStorage.getItem("qaPairs")) || {};
+    } catch (e) {
+      console.error("Failed to parse qaPairs from localStorage:", e);
+      qaPairsFromStorage = {};
+    }
 
-    if (qaPairsFromStorage) {
+    if (Object.keys(qaPairsFromStorage).length > 0) {
       const combinedQaPairs = [];
+      const hasStructuredKeys = 
+        qaPairsFromStorage.output_boolq || 
+        qaPairsFromStorage.output_mcq || 
+        qaPairsFromStorage.output_shortq;
+
       if (qaPairsFromStorage.output_boolq) {
         const boolData = qaPairsFromStorage.output_boolq;
         const questions = boolData.Boolean_Questions || boolData.output;
@@ -136,14 +147,14 @@ const Output = () => {
         });
       }
 
-      
-      if (Array.isArray(qaPairsFromStorage.output)) {
+      if (!hasStructuredKeys && Array.isArray(qaPairsFromStorage.output)) {
         if (questionType === "get_boolq") {
           const answers = qaPairsFromStorage.answers;
           qaPairsFromStorage.output.forEach((qaPair, index) => {
             combinedQaPairs.push({
               question: qaPair,
               question_type: "Boolean",
+              context: qaPairsFromStorage.text || qaPairsFromStorage.Text,
               answer: answers?.[index] ?? "Answer not found",
             });
           });
@@ -172,7 +183,7 @@ const Output = () => {
 
       setQaPairs(combinedQaPairs);
     }
-  }, [questionType]);
+  }, []);
 
   const generateGoogleForm = async () => {
     try {
