@@ -193,7 +193,7 @@ const Text_Input = () => {
         
         {/* Character Counter */}
         <div className="mx-4 sm:mx-8">
-          <CharacterCounter text={text} maxLength={2500} />
+          <CharacterCounter text={text.trim()} maxLength={2500} />
           {validationError && (
             <div className="text-red-500 font-bold text-sm mt-2">
               {validationError}
@@ -269,9 +269,9 @@ const Text_Input = () => {
           </Link>
           <button
             onClick={handleSaveToLocalStorage}
-            disabled={loading || text.length > 2500}
+            disabled={loading || text.trim().length > 2500}
             className={`bg-black text-white text-lg sm:text-xl px-4 py-2 border-gradient flex justify-center items-center rounded-xl w-full sm:w-auto ${
-              text.length > 2500 ? "opacity-50 cursor-not-allowed" : "hover:opacity-90 transition-opacity"
+              text.trim().length > 2500 ? "opacity-50 cursor-not-allowed" : "hover:opacity-90 transition-opacity"
             }`}
           >
             {loading ? "Processing..." : "Next"}
