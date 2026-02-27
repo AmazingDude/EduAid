@@ -7,6 +7,8 @@ import { FaClipboard } from "react-icons/fa";
 import Switch from "react-switch";
 import { Link,useNavigate } from "react-router-dom";
 import apiClient from "../utils/apiClient";
+import CharacterCounter from "../components/FormValidation/CharacterCounter";
+import { validateTextInput } from "../utils/validation";
 
 const Text_Input = () => {
   const navigate = useNavigate();
@@ -63,6 +65,14 @@ const Text_Input = () => {
         setLoading(false);
       }
     } else if (text) {
+      // Validate text input before proceeding
+      const validation = validateTextInput(text);
+      if (!validation.isValid) {
+        setText(validation.error);
+        setLoading(false);
+        return;
+      }
+
       // Proceed with existing functionality for local storage
       localStorage.setItem("textContent", text);
       localStorage.setItem("difficulty", difficulty);
@@ -178,6 +188,11 @@ const Text_Input = () => {
           />
           <style>{`textarea::-webkit-scrollbar { display: none; }`}</style>
         </div>
+        
+        {/* Character Counter */}
+        <div className="mx-4 sm:mx-8">
+          <CharacterCounter text={text} maxLength={2500} />
+        </div>
 
         {/* Separator */}
         <div className="text-white text-center my-4 text-lg">or</div>
@@ -247,9 +262,12 @@ const Text_Input = () => {
           </Link>
           <button
             onClick={handleSaveToLocalStorage}
-            className="bg-black text-white text-lg sm:text-xl px-4 py-2 border-gradient flex justify-center items-center rounded-xl w-full sm:w-auto"
+            disabled={loading || text.length > 2500}
+            className={`bg-black text-white text-lg sm:text-xl px-4 py-2 border-gradient flex justify-center items-center rounded-xl w-full sm:w-auto ${
+              text.length > 2500 ? "opacity-50 cursor-not-allowed" : "hover:opacity-90 transition-opacity"
+            }`}
           >
-            Next
+            {loading ? "Processing..." : "Next"}
           </button>
         </div>
       </div>
