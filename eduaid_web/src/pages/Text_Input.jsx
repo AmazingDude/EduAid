@@ -13,6 +13,7 @@ import { validateTextInput } from "../utils/validation";
 const Text_Input = () => {
   const navigate = useNavigate();
   const [text, setText] = useState("");
+  const [validationError, setValidationError] = useState("");
   const [difficulty, setDifficulty] = useState("Easy Difficulty");
   const [numQuestions, setNumQuestions] = useState(10);
   const [loading, setLoading] = useState(false);
@@ -64,14 +65,15 @@ const Text_Input = () => {
       } finally {
         setLoading(false);
       }
-    } else if (text) {
+    } else {
       // Validate text input before proceeding
       const validation = validateTextInput(text);
       if (!validation.isValid) {
-        setText(validation.error);
+        setValidationError(validation.error);
         setLoading(false);
         return;
       }
+      setValidationError("");
 
       // Proceed with existing functionality for local storage
       localStorage.setItem("textContent", text);
@@ -192,6 +194,11 @@ const Text_Input = () => {
         {/* Character Counter */}
         <div className="mx-4 sm:mx-8">
           <CharacterCounter text={text} maxLength={2500} />
+          {validationError && (
+            <div className="text-red-500 font-bold text-sm mt-2">
+              {validationError}
+            </div>
+          )}
         </div>
 
         {/* Separator */}
